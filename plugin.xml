@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+      point="org.eclipse.ui.preferencePages">
+	    <page
+	          class="sqle.action.HomePreferencePage"
+	          id="sqle.preference.HomePreferencePage"
+	          name="SQLE">
+	    </page>
+	</extension>
+
+   <extension
+	     point="org.eclipse.ui.menus">
+	  <menuContribution
+	        allPopups="false"
+	        locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	     <command
+	           commandId="your.command.id"
+	           label="sqle audit"
+	           style="push">
+	     </command>
+	  </menuContribution>
+	</extension>
+	
+	<extension
+	     point="org.eclipse.ui.commands">
+	  <command
+	        id="your.command.id"
+	        name="Your Command">
+	  </command>
+	</extension>
+	
+	
+	<extension
+	     point="org.eclipse.ui.handlers">
+	  <handler
+	        class="sqle.action.RightClickMenu"
+	        commandId="your.command.id">
+	  </handler>
+	</extension>
+	
+	<extension
+    point="org.eclipse.ui.views">
+    <view
+        class="sqle.action.CustomView"
+        id="your.plugin.id.customView"
+        name="Audit Result">
+    </view>
+</extension>
+</plugin>
