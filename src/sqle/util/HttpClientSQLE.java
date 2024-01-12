@@ -44,6 +44,7 @@ public class HttpClientSQLE {
     
     public void Login() throws Exception {
         Map<String, String> req = new HashMap<>();
+        uriHead = "http://" + settings.getSQLEAddr();
         req.put("username", settings.getUserName());
         req.put("password", settings.getPassword());
         
