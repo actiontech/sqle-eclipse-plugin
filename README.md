@@ -4,6 +4,9 @@
 
 该项目是[SQLE](https://github.com/actiontech/sqle) 的 Eclipse 审核插件 , 该插件满足开发人员在开发阶段进行实时自助式的静态SQL审核，实现开发阶段审核上线等各个SQL开发阶段的SQL开发规范。
 
+## 编译
+JavaSE 17版本
+Eclipse插件最高支持Java SE22版本，但是MyEclipse最高仅支持Java SE17版本，所以使用Java17版本进行开发插件
 
 ## 使用方式
 
