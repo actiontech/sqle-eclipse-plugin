@@ -15,7 +15,7 @@ public class Audit {
 
 	public static void AuditSQL(String[] contents, SQLESettings.AuditType type) {
 		Display display = PlatformUI.getWorkbench().getDisplay();
-        Shell activeShell = display.getActiveShell();
+		Shell activeShell = display.getActiveShell();
 
 		HttpClientSQLE client = new HttpClientSQLE();
 		try {

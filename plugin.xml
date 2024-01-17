@@ -1,51 +1,136 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-      point="org.eclipse.ui.preferencePages">
-	    <page
-	          class="sqle.action.HomePreferencePage"
-	          id="sqle.preference.HomePreferencePage"
-	          name="SQLE">
-	    </page>
+	<extension
+		point="org.eclipse.ui.preferencePages">
+		<page
+			class="sqle.action.HomePreferencePage"
+			id="sqle.preference.HomePreferencePage"
+			name="SQLE">
+		</page>
+	</extension>
+	<extension
+		point="org.eclipse.ui.views">
+		<view
+			class="sqle.action.CustomView"
+			id="your.plugin.id.customView"
+			name="Audit Result">
+		</view>
+	</extension>
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution
+			allPopups="false"
+			locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu?after=additions">
+			<!-- SQLE SQL Audit -->
+			<command
+				commandId="your.sql.audit.command.id"
+				label="SQLE SQL Audit">
+				<visibleWhen checkEnabled="true">
+					<with variable="selection">
+						<iterate>
+							<and>
+								<adapt
+									type="org.eclipse.core.resources.IResource">
+									<test
+										property="org.eclipse.core.resources.extension"
+										value="sql" />
+								</adapt>
+							</and>
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+
+			<!-- SQLE MyBatis Audit -->
+			<command
+				commandId="your.mybatis.audit.command.id"
+				label="SQLE MyBatis Audit">
+				<visibleWhen checkEnabled="true">
+					<with variable="selection">
+						<iterate ifEmpty="false">
+							<adapt type="org.eclipse.core.resources.IResource">
+								<test
+									property="org.eclipse.core.resources.extension"
+									value="xml" />
+							</adapt>
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+
+			<!-- SQLE MyBatis Folder Audit -->
+			<command
+				commandId="your.mybatis.folder.audit.command.id"
+				label="SQLE MyBatis Folder Audit">
+				<visibleWhen checkEnabled="true">
+					<with variable="selection">
+						<iterate>
+							<adapt type="org.eclipse.core.resources.IFolder">
+							</adapt>
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
 	</extension>
 
-   <extension
-	     point="org.eclipse.ui.menus">
-	  <menuContribution
-	        allPopups="false"
-	        locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	     <command
-	           commandId="your.command.id"
-	           label="sqle audit"
-	           style="push">
-	     </command>
-	  </menuContribution>
-	</extension>
-	
 	<extension
-	     point="org.eclipse.ui.commands">
-	  <command
-	        id="your.command.id"
-	        name="Your Command">
-	  </command>
+		point="org.eclipse.ui.menus">
+		<menuContribution
+			allPopups="false"
+			locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+			<command
+				commandId="your.command.id"
+				label="SQLE SQL Audit">
+				<visibleWhen>
+					<with variable="selection">
+						<instanceof
+							value="org.eclipse.jface.text.ITextSelection" />
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
 	</extension>
-	
-	
+
 	<extension
-	     point="org.eclipse.ui.handlers">
-	  <handler
-	        class="sqle.action.RightClickMenu"
-	        commandId="your.command.id">
-	  </handler>
+		point="org.eclipse.ui.commands">
+		<command
+			id="your.command.id"
+			name="sqle audit">
+		</command>
+		<command
+			id="your.sql.audit.command.id"
+			name="sqle sql audit">
+		</command>
+		<command
+			id="your.mybatis.audit.command.id"
+			name="sqle mybatis audit">
+		</command>
+		<command
+			id="your.mybatis.folder.audit.command.id"
+			name="sqle mybatis folder audit">
+		</command>
 	</extension>
-	
+
 	<extension
-    point="org.eclipse.ui.views">
-    <view
-        class="sqle.action.CustomView"
-        id="your.plugin.id.customView"
-        name="Audit Result">
-    </view>
-</extension>
+		point="org.eclipse.ui.handlers">
+		<handler
+			class="sqle.action.AuditSql"
+			commandId="your.command.id">
+		</handler>
+		<handler
+			class="sqle.action.AuditFile"
+			commandId="your.sql.audit.command.id">
+		</handler>
+		<handler
+			class="sqle.action.AuditFile"
+			commandId="your.mybatis.audit.command.id">
+		</handler>
+		<handler
+			class="sqle.action.AuditFile"
+			commandId="your.mybatis.folder.audit.command.id">
+		</handler>
+	</extension>
+
+
 </plugin>

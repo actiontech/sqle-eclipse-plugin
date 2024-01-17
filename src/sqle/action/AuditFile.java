@@ -4,13 +4,8 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.commands.IHandlerListener;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
-import org.eclipse.ui.texteditor.ITextEditor;
-import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
 import java.nio.file.*;
@@ -19,9 +14,9 @@ import java.io.File;
 import java.io.IOException;
 import sqle.config.SQLESettings;
 
-public class RightClickMenu implements IHandler {
+public class AuditFile implements IHandler {
 	 private ArrayList<String> filePaths;
-	 private SQLESettings.AuditType type;
+	 private SQLESettings.AuditType type = SQLESettings.AuditType.MyBatis;
 	 private boolean isSQLEAuditEnabled = true;
 
 	@Override
@@ -39,42 +34,23 @@ public class RightClickMenu implements IHandler {
 			IResource resource = (IResource) ((IAdaptable) firstElement).getAdapter(IResource.class);
 			if (resource != null) {
 				String filePath = resource.getLocation().toString();
-				audit(filePath, "file");
-			}
-		} else {
-			// 获取审核sql内容
-			IEditorPart editorPart = HandlerUtil.getActiveEditor(event);
-			if (editorPart instanceof ITextEditor) {
-				ITextEditor textEditor = (ITextEditor) editorPart;
-				ISelectionProvider selectionProvider = textEditor.getSelectionProvider();
-				ISelection iselection = selectionProvider.getSelection();
-
-				if (iselection instanceof ITextSelection) {
-					ITextSelection textSelection = (ITextSelection) iselection;
-					String selectedText = textSelection.getText();
-					type = SQLESettings.AuditType.SQL;
-					audit(selectedText, "");
-				}
+				audit(filePath);
 			}
 		}
 		return null;
 	}
 
-	private void audit(String auditContent, String auditType) {
+	private void audit(String auditContent) {
         ArrayList<String> texts = new ArrayList<>();
-		if (auditType == "file") {
-			gatherFilesFromDir(auditContent);
-	        for (String filePath : filePaths) {
-	            try {
-	                String text = Files.readString(Path.of(filePath));
-	                texts.add(text);
-	            } catch (IOException e) {
-	                e.printStackTrace();
-	            }
-	        }
-		} else {
-			texts.add(auditContent);
-		}
+        gatherFilesFromDir(auditContent);
+        for (String filePath : filePaths) {
+            try {
+                String text = Files.readString(Path.of(filePath));
+                texts.add(text);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 		Audit.AuditSQL(texts.toArray(new String[0]), type);
 	}
 	
@@ -86,7 +62,6 @@ public class RightClickMenu implements IHandler {
             if (files == null) {
                 return;
             }
-            type = SQLESettings.AuditType.MyBatis;
             for (File f : files) {
                 if (f.isDirectory()) {
                     gatherFilesFromDir(f.getPath());
@@ -95,13 +70,10 @@ public class RightClickMenu implements IHandler {
                 }
             }
         } else if (file.isFile()) {
-        	if (file.getName().endsWith(".xml")) {
-                type = SQLESettings.AuditType.MyBatis;
-        		addFilePath(file.getPath());
-        	} else if (file.getName().endsWith(".sql")) {
+        	if (file.getName().endsWith(".sql")) {
                 type = SQLESettings.AuditType.SQL;
-        		addFilePath(file.getPath());
         	} 
+    		addFilePath(file.getPath());
         }
     }
     

@@ -18,6 +18,7 @@ public class SQLESettings {
 	public static final String DBTYPE_PREFERENCE_KEY = "dbTypePreference";
 	public static final String DATASOURCE_PREFERENCE_KEY = "dataSourcePreference";
 	public static final String SCHEMA_PREFERENCE_KEY = "schemaPreference";
+	public static final String HTTPS_PREFERENCE_KEY = "httpPreference";
 	
     private String SQLEAddr;
     private boolean EnableHttps;
@@ -35,10 +36,9 @@ public class SQLESettings {
     public String[][] SchemaList = {};
     
     public Map<String,String> projectUidMap;
-
     
-    private SQLESettings() {
-        store = Activator.getDefault().getPreferenceStore();
+    public void UpdateSettings() {
+    	store = Activator.getDefault().getPreferenceStore();
         String addr = store.getString(SQLE_ADDR_PREFERENCE_KEY);
         String userName = store.getString(USER_PREFERENCE_KEY);
         String password = store.getString(PASSWORD_PREFERENCE_KEY);
@@ -46,6 +46,7 @@ public class SQLESettings {
         String dbType = store.getString(DBTYPE_PREFERENCE_KEY);
         String dataSource = store.getString(DATASOURCE_PREFERENCE_KEY);
         String schema = store.getString(SCHEMA_PREFERENCE_KEY);
+        String httpType = store.getString(HTTPS_PREFERENCE_KEY);
         
         String[][] projectList = {{project, project}};
         this.setProjectList(projectList);
@@ -55,20 +56,25 @@ public class SQLESettings {
         this.setDBSourceList(dataSourceList);
         String[][] schemaList = {{schema, schema}};
         this.setSchemaList(schemaList);
-        
-        this.setSQLEAddr(addr);
-        this.setUserName(userName);
-        this.setPassword(password);
-        this.setProjectName(project);
-        this.setDBType(dbType);
-        this.setDataSourceName(dataSource);
-        this.setSchemaName(schema);
+
+        this.setEnableHttps(httpType);
+        this.SQLEAddr = addr;
+        this.UserName = userName;
+        this.Password = password;
+        this.ProjectName = project;
+        this.DBType = dbType;
+        this.DataSourceName = dataSource;
+        this.SchemaName = schema;
+    }
+    
+    private SQLESettings() {
     }
     
     public static SQLESettings getInstance() {
     	if (instance == null) {
     		instance = new SQLESettings();
     	}
+    	instance.UpdateSettings();
     	return instance;
     }
     
@@ -121,8 +127,12 @@ public class SQLESettings {
 	public boolean isEnableHttps() {
 		return EnableHttps;
 	}
-	public void setEnableHttps(boolean enableHttps) {
-		EnableHttps = enableHttps;
+	public void setEnableHttps(String enableHttps) {
+		if (enableHttps.equals("https")) {
+			EnableHttps = true;
+		} else {
+			EnableHttps = false;
+		}
 	}
 	public String getSQLEAddr() {
 		return SQLEAddr;

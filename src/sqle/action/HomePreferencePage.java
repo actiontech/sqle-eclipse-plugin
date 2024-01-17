@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -32,6 +33,7 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 	private CustomComboFieldEditor dbTypeCombo;
 	private CustomComboFieldEditor dataSourceCombo;
 	private CustomComboFieldEditor schemaCombo;
+	private RadioGroupFieldEditor httpHttpsRadioGroup;
 
 	private SQLESettings settings;
 	private HttpClientSQLE client;
@@ -46,7 +48,7 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
 		this.settings = SQLESettings.getInstance();
 		this.client = new HttpClientSQLE();
-		
+
 		Display display = PlatformUI.getWorkbench().getDisplay();
         Shell activeShell = display.getActiveShell();
 		this.dialog = new DialogInfo(activeShell);
@@ -58,7 +60,18 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 		// 添加sqle地址输入框
 		addrInput = new StringFieldEditor(SQLESettings.SQLE_ADDR_PREFERENCE_KEY, "SQLE Addr:", parent);
 		addField(addrInput);
-
+		// 添加http/https选项框
+	    String[][] httpHttpsOptions = {{"http", "http"}, {"https", "https"}};
+	    httpHttpsRadioGroup = new RadioGroupFieldEditor(
+	            SQLESettings.HTTPS_PREFERENCE_KEY,
+	            "http",
+	            2,
+	            httpHttpsOptions,
+	            parent,
+	            true
+	    );
+	    addField(httpHttpsRadioGroup);
+	    
 		// 添加用户输入框
 		userInput = new StringFieldEditor(SQLESettings.USER_PREFERENCE_KEY, "用户:", parent);
 		addField(userInput);
@@ -141,6 +154,7 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 		settings.setSQLEAddr(addrInput.getStringValue());
 		settings.setUserName(userInput.getStringValue());
 		settings.setPassword(passwordInput.getStringValue());
+		settings.setEnableHttps(httpHttpsRadioGroup.getSelectionValue());
 		try {
 			client.Login();
 			dialog.displaySuccessDialog("Test Connect", "Test Connection Success");
