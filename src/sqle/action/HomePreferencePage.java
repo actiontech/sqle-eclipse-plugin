@@ -61,10 +61,10 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 		addrInput = new StringFieldEditor(SQLESettings.SQLE_ADDR_PREFERENCE_KEY, "SQLE Addr:", parent);
 		addField(addrInput);
 		// 添加http/https选项框
-	    String[][] httpHttpsOptions = {{"http", "http"}, {"https", "https"}};
+	    String[][] httpHttpsOptions = {{"HTTP", "http"}, {"HTTPS", "https"}};
 	    httpHttpsRadioGroup = new RadioGroupFieldEditor(
 	            SQLESettings.HTTPS_PREFERENCE_KEY,
-	            "http",
+	            "HTTP",
 	            2,
 	            httpHttpsOptions,
 	            parent,
