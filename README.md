@@ -23,12 +23,14 @@ Eclipse插件最高支持Java SE22版本，但是MyEclipse最高仅支持Java SE
   - 点击Test Connection，确保可以连接到SQLE，并获取Project和DBType列表
   - 依次选取Project，DBType，Data Source和Schema下拉框
   - 点击Apply and Close保存配置并退出配置界面
-    ![20240112-173243](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/bf182405-5038-4866-8618-6ef0f1569de1)
+   ![20240118-133603](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/4d113257-0b28-4bc8-81d5-1d955ca95009)
+
   - 配置说明
 
 | 配置项             | 配置项说明                                            |
 |-----------------|--------------------------------------------------|
 | SQLE Addr       | SQLE 服务地址, 格式为 IP:Port                           |
+| HTTP       | 指定通过http的方式连接SQLE还是通过https的方式连接                           |
 | UserName        | 登录SQLE使用的用户名                                     |
 | Password        | 登录SQLE使用的密码                                      |
 | Test Connection | 测试连接是否成功, 将会尝试登录                                 |
@@ -38,14 +40,16 @@ Eclipse插件最高支持Java SE22版本，但是MyEclipse最高仅支持Java SE
 | Schema          | 数据库名称                                            |
 
 ### 使用说明
-1. 选中需要审核的SQL, 可以同时选中多条SQL.点击右键, 选中 [sqle audit] ,  插件会以视图的形式将审核结果进行展示
-![20240112-174009](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/af8d6dc5-43cc-4b34-8626-65d68b6e57af)
+1. 选中需要审核的SQL, 可以同时选中多条SQL.点击右键, 选中 [SQLE SQL Audit] ,  插件会以视图的形式将审核结果进行展示
+![20240118-133916](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/ca3dd9ae-501e-48e0-867f-5467e4ff61b1)
 
-2. 审核mybatis xml文件,选中mybatis xml文件,鼠标右击选中 [sqle audit]
-![20240112-174318](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/494d7d33-eb65-4dea-990c-d99dd3f59f64)
+2. 审核mybatis xml文件,选中mybatis xml文件,鼠标右击选中 [SQLE Mybatis Audit]
+![20240118-134103](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/6b8cd9a4-4676-415c-9000-0a8407c17efd)
 
-3. 审核sql文件，选中sql文件，鼠标右击选中 [sqle audit]
-   ![20240112-174531](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/b03ff8a9-d4ce-48fc-9046-27fffacf2e48)
+3. 审核sql文件，选中sql文件，鼠标右击选中 [SQLE SQL Audit]
+![20240118-134219](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/65ea91da-537c-4d01-a912-9d82fb64952c)
 
+4. 审核xml文件夹，选中文件夹，鼠标右击选中 [SQLE Mybatis Folder Audit]
+![20240118-134450](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/c1ab3c24-8d71-4266-9654-8ef12ae989fe)
 
 
