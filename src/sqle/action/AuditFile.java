@@ -5,7 +5,8 @@ import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.commands.IHandlerListener;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
 import java.nio.file.*;
@@ -21,12 +22,13 @@ public class AuditFile implements IHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		IStructuredSelection selection = HandlerUtil.getCurrentStructuredSelection(event);
         filePaths = new ArrayList<>();
 
-		if (selection == null) {
-			return null;
-		}
+	    IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+	    if (window == null) {
+	    	return null;
+	    }
+        IStructuredSelection selection = (IStructuredSelection) window.getSelectionService().getSelection();
 
 		Object firstElement = selection.getFirstElement();
 		// 获取审核文件或文件夹
@@ -45,7 +47,8 @@ public class AuditFile implements IHandler {
         gatherFilesFromDir(auditContent);
         for (String filePath : filePaths) {
             try {
-                String text = Files.readString(Path.of(filePath));
+            	byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+                String text = new String(bytes);
                 texts.add(text);
             } catch (IOException e) {
                 e.printStackTrace();

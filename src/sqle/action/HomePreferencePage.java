@@ -13,6 +13,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
@@ -154,7 +155,27 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 		settings.setSQLEAddr(addrInput.getStringValue());
 		settings.setUserName(userInput.getStringValue());
 		settings.setPassword(passwordInput.getStringValue());
-		settings.setEnableHttps(httpHttpsRadioGroup.getSelectionValue());
+		
+		Composite radioBoxControl = httpHttpsRadioGroup.getRadioBoxControl(getFieldEditorParent());
+		
+		String selectedValue = "http";
+		if (radioBoxControl != null) {
+		    Control[] children = radioBoxControl.getChildren();
+		    
+		    for (Control child : children) {
+		        if (child instanceof Button) {
+		            Button button = (Button) child;
+		            
+		            if (button.getSelection()) {
+		                // 获取选中的按钮的数据
+		                selectedValue = (String) button.getData();
+		                break;
+		            }
+		        }
+		    }
+		}
+				
+		settings.setEnableHttps(selectedValue);
 		try {
 			client.Login();
 			dialog.displaySuccessDialog("Test Connect", "Test Connection Success");

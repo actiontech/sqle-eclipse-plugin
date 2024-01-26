@@ -1,19 +1,17 @@
 package sqle.util;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.DataOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import com.google.gson.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import java.net.http.HttpRequest.BodyPublishers;
 import sqle.config.*;
 
 public class HttpClientSQLE {
@@ -50,31 +48,18 @@ public class HttpClientSQLE {
 		req.put("username", settings.getUserName());
 		req.put("password", settings.getPassword());
 
-		JSONObject jsonObject = new JSONObject(req);
-		String reqJson = jsonObject.toString();
+        Gson gson = new Gson();
+        String reqJson = gson.toJson(req);
 
 		String formatStr = String.format("{\"session\":%s}", reqJson);
 
-		HttpClient client = HttpClient.newHttpClient();
+        JsonObject resp = sendPOST(uriHead + loginPath, formatStr);
+        if (resp.get("code").getAsInt() != 0) {
+            throw new Exception("login failed: " + resp.get("message").getAsString());
+        }
 
-		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uriHead + loginPath))
-				.header("Content-Type", "application/json").POST(BodyPublishers.ofString(formatStr)).build();
+        token = resp.get("data").getAsJsonObject().get("token").getAsString();
 
-		CompletableFuture<HttpResponse<String>> responseFuture = client.sendAsync(request,
-				HttpResponse.BodyHandlers.ofString());
-
-		HttpResponse<String> response = responseFuture.join();
-		int statusCode = response.statusCode();
-		String body = response.body();
-		JSONObject jsonResponse = new JSONObject(body);
-
-		if (statusCode != 200) {
-			throw new Exception("login failed: " + jsonResponse.getString("message"));
-		}
-		if (jsonResponse.getInt("code") != 0) {
-			throw new Exception("audit failed: " + jsonResponse.getString("message"));
-		}
-		token = jsonResponse.getJSONObject("data").getString("token");
 		this.settings.setToken(token);
 	}
 
@@ -84,30 +69,34 @@ public class HttpClientSQLE {
 		}
 
 		String reqPath = String.format("%s?page_index=%s&page_size=%s", projectPath, "1", "999999");
-		HttpResponse<String> response = sendGet(GetAddr() + reqPath);
-		String body = response.body();
-		JSONObject jsonResponse = new JSONObject(body);
+		JsonObject resp = sendGet(GetAddr() + reqPath);
+        if (resp.get("code").getAsInt() != 0) {
+            throw new Exception("get data source list failed: " + resp.get("message").getAsString());
+        }
 
-		JSONArray projectsArray = jsonResponse.getJSONArray("data");
+        JsonArray projectsArray = resp.getAsJsonArray("data");
 		Map<String, String> projectMap = new HashMap<>();
 		try {
-			for (int i = 0; i < projectsArray.length(); i++) {
-				JSONObject projectObject = projectsArray.getJSONObject(i);
-				ListProject project = parseJsonToProject(projectObject);
-				projectMap.put(project.getName(), project.getProjectUid());
-			}
+		    for (JsonElement element : projectsArray) {
+		        if (element.isJsonObject()) {
+		            JsonObject projectObject = element.getAsJsonObject();
+		            ListProject project = parseJsonToProject(projectObject);
+		            projectMap.put(project.getName(), project.getProjectUid());
+		        }
+		    }
 		} catch (Exception e) {
-			e.printStackTrace();
+		    e.printStackTrace();
+		    // 处理其他异常
 		}
 		settings.setProjectUidMap(projectMap);
 		return projectMap;
 	}
 
-	private static ListProject parseJsonToProject(JSONObject json) throws Exception {
-		String uid = json.getString("uid");
-		String name = json.getString("name");
+	private static ListProject parseJsonToProject(JsonObject json) throws Exception {
+	    String uid = json.get("uid").getAsString();
+	    String name = json.get("name").getAsString();
 
-		return new ListProject(uid, name);
+	    return new ListProject(uid, name);
 	}
 
 	public ArrayList<String> GetDBTypes() throws Exception {
@@ -115,17 +104,17 @@ public class HttpClientSQLE {
 			Login();
 		}
 
-		HttpResponse<String> response = sendGet(GetAddr() + driversPath);
-		String body = response.body();
-		JSONObject jsonResponse = new JSONObject(body);
+		JsonObject resp  = sendGet(GetAddr() + driversPath);
+        if (resp.get("code").getAsInt() != 0) {
+            throw new Exception("get db type failed: " + resp.get("message").getAsString());
+        }
 
-		JSONArray dataTypeJsonArrray = jsonResponse.getJSONObject("data").getJSONArray("driver_name_list");
-
-		ArrayList<String> list = new ArrayList<>();
-		for (int i = 0; i < dataTypeJsonArrray.length(); i++) {
-			list.add(dataTypeJsonArrray.getString(i));
-		}
-		return list;
+        JsonArray array = resp.get("data").getAsJsonObject().get("driver_name_list").getAsJsonArray();
+        ArrayList<String> list = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            list.add(array.get(i).getAsString());
+        }
+        return list;
 	}
 
 	public ArrayList<String> GetDataSourceNameList(String projectName, String dbType) throws Exception {
@@ -139,27 +128,32 @@ public class HttpClientSQLE {
 		String encodedDbType = URLEncoder.encode(dbType, "UTF-8");
 		String reqPath = String.format("%s?filter_by_db_type=%s&page_index=%s&page_size=%s", dataSourcePath,
 				encodedDbType, "1", "999999");
-		HttpResponse<String> response = sendGet(GetAddr() + reqPath);
-		String body = response.body();
-		JSONObject jsonResponse = new JSONObject(body);
+		JsonObject resp = sendGet(GetAddr() + reqPath);
+		
+        if (resp.get("code").getAsInt() != 0) {
+            throw new Exception("get data source list failed: " + resp.get("message").getAsString());
+        }
+		
 
-		JSONArray projectsArray = jsonResponse.getJSONArray("data");
+        JsonArray projectsArray = resp.getAsJsonArray("data");
 		ArrayList<String> list = new ArrayList<>();
 		try {
-			for (int i = 0; i < projectsArray.length(); i++) {
-				JSONObject projectObject = projectsArray.getJSONObject(i);
-				SQLEDataSourceNameListResult dataSource = parseJsonToDataSource(projectObject);
-				list.add(dataSource.getName());
-			}
+		    for (JsonElement element : projectsArray) {
+		        if (element.isJsonObject()) {
+		            JsonObject projectObject = element.getAsJsonObject();
+		            SQLEDataSourceNameListResult dataSource = parseJsonToDataSource(projectObject);
+		            list.add(dataSource.getName());
+		        }
+		    }
 		} catch (Exception e) {
-			e.printStackTrace();
+		    e.printStackTrace();
 		}
 
 		return list;
 	}
 
-	private static SQLEDataSourceNameListResult parseJsonToDataSource(JSONObject json) throws Exception {
-		String name = json.getString("name");
+	private static SQLEDataSourceNameListResult parseJsonToDataSource(JsonObject json) throws Exception {
+	    String name = json.getAsJsonPrimitive("name").getAsString();
 
 		return new SQLEDataSourceNameListResult(name);
 	}
@@ -170,16 +164,16 @@ public class HttpClientSQLE {
 		}
 
 		String reqPath = String.format(HttpClientSQLE.schemaPath, projectName, dataSourceName);
-		HttpResponse<String> response = sendGet(GetAddr() + reqPath);
-		String body = response.body();
-		JSONObject jsonResponse = new JSONObject(body);
+		JsonObject resp = sendGet(GetAddr() + reqPath);
+        if (resp.get("code").getAsInt() != 0) {
+            throw new Exception("get schema name list: " + resp.get("message").getAsString());
+        }
 
-		JSONArray dataTypeJsonArrray = jsonResponse.getJSONObject("data").getJSONArray("schema_name_list");
-
-		ArrayList<String> list = new ArrayList<>();
-		for (int i = 0; i < dataTypeJsonArrray.length(); i++) {
-			list.add(dataTypeJsonArrray.getString(i));
-		}
+        JsonArray array = resp.get("data").getAsJsonObject().get("schema_name_list").getAsJsonArray();
+        ArrayList<String> list = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            list.add(array.get(i).getAsString());
+        }
 		return list;
 	}
 
@@ -187,7 +181,6 @@ public class HttpClientSQLE {
 		if (token == null || token.equals("")) {
 			Login();
 		}
-		Gson gson = new Gson();
 
 		Map<String, Object> req = new HashMap<>();
 		req.put("instance_type", settings.getDBType());
@@ -205,60 +198,74 @@ public class HttpClientSQLE {
 			break;
 		}
 
-		JSONObject jsonObject = new JSONObject(req);
-		String reqJson = jsonObject.toString();
+        Gson newGson = new Gson();
+        String reqJson = newGson.toJson(req);
+        JsonObject resp = sendPOST(GetAddr() + auditPath, reqJson);
+        if (resp.get("code").getAsInt() != 0) {
+            throw new Exception("audit failed: " + resp.get("message").getAsString());
+        }
 
-		HttpResponse<String> response = sendPOST(GetAddr() + auditPath, reqJson);
-		String body = response.body();
-
-		JsonParser parser = new JsonParser();
-		JsonObject jsonResponse = parser.parse(body).getAsJsonObject();
-
-		JsonObject data = jsonResponse.get("data").getAsJsonObject();
-		return gson.fromJson(data, new SQLEAuditResult().getClass());
+        JsonObject data = resp.get("data").getAsJsonObject();
+        return newGson.fromJson(data, new SQLEAuditResult().getClass());
 	}
 
-	private HttpResponse<String> sendGet(String path) throws Exception {
-		HttpClient client = HttpClient.newHttpClient();
+	private JsonObject sendGet(String path) throws Exception {
+        URL url = new URL(path);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer " + token);
 
-		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(path)).header("Authorization", "Bearer " + token)
-				.GET().build();
-		HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-		int statusCode = httpResponse.statusCode();
-		String body = httpResponse.body();
-		if (statusCode == 401) {
-			Login();
-			return sendGet(path);
-		}
-		if (statusCode != 200) {
-			throw new Exception("response code != 200, message: " + httpResponse.body());
-		}
-		JSONObject jsonResponse = new JSONObject(body);
-		if (jsonResponse.getInt("code") != 0) {
-			throw new Exception("message: " + jsonResponse.getString("message"));
-		}
-		return httpResponse;
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+        int responseCode = conn.getResponseCode();
+        if (responseCode == 401) {
+            Login();
+            return sendGet(path);
+        }
+        String respStr = response.toString();
+        if (responseCode != 200) {
+            throw new Exception("response code != 200, message: " + respStr);
+        }
+        return new JsonParser().parse(respStr).getAsJsonObject();
 	}
 
-	private HttpResponse<String> sendPOST(String path, String reqJSON) throws Exception {
-		HttpClient client = HttpClient.newHttpClient();
+	private JsonObject sendPOST(String path, String request) throws Exception {
+		URL url = new URL(path);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(path)).header("Authorization", "Bearer " + token)
-				.header("Content-Type", "application/json").POST(BodyPublishers.ofString(reqJSON)).build();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Authorization", "Bearer " + token);
+        conn.setRequestProperty("Content-Type", "application/json");
+        
+        conn.setDoOutput(true);
+        DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+        wr.write(request.getBytes(StandardCharsets.UTF_8));
+        wr.flush();
+        wr.close();
+        
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
 
-		CompletableFuture<HttpResponse<String>> responseFuture = client.sendAsync(request,
-				HttpResponse.BodyHandlers.ofString());
-		HttpResponse<String> response = responseFuture.join();
-		int statusCode = response.statusCode();
-		String body = response.body();
-		if (statusCode != 200) {
-			throw new Exception("response code != 200, message: " + response.body());
-		}
-		JSONObject jsonResponse = new JSONObject(body);
-		if (jsonResponse.getInt("code") != 0) {
-			throw new Exception("message: " + jsonResponse.getString("message"));
-		}
-
-		return response;
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+        int responseCode = conn.getResponseCode();
+        if (responseCode == 401) {
+            Login();
+            return sendPOST(path, request);
+        }
+        String respStr = response.toString();
+        if (responseCode != 200) {
+            throw new Exception("response code != 200, message: " + respStr);
+        }
+        return new JsonParser().parse(respStr).getAsJsonObject();
 	}
 }
