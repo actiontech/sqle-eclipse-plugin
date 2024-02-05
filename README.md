@@ -2,7 +2,7 @@
 
 ## 简介
 
-该项目是[SQLE](https://github.com/actiontech/sqle) 的 Eclipse 审核插件 , 该插件满足开发人员在开发阶段进行实时自助式的静态SQL审核，实现开发阶段审核上线等各个SQL开发阶段的SQL开发规范。
+该项目是[SQLE](https://github.com/actiontech/sqle) 的 Eclipse 审核插件 , 该插件满足开发人员在开发阶段进行实时自助式的SQL审核，实现开发阶段审核上线等各个SQL开发阶段的SQL开发规范。
 
 ## 编译
 Java8版本
