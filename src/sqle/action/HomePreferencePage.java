@@ -1,17 +1,25 @@
 package sqle.action;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jface.preference.ComboFieldEditor;
+import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -19,6 +27,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.swt.widgets.Text;
 
 import sqle.util.HttpClientSQLE;
 import sqle.config.SQLESettings;
@@ -30,6 +39,8 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 	private StringFieldEditor addrInput;
 	private StringFieldEditor userInput;
 	private StringFieldEditor passwordInput;
+	private StringFieldEditor tokenInput;
+
 	private CustomComboFieldEditor projectCombo;
 	private CustomComboFieldEditor dbTypeCombo;
 	private CustomComboFieldEditor dataSourceCombo;
@@ -39,6 +50,8 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 	private SQLESettings settings;
 	private HttpClientSQLE client;
 	private DialogInfo dialog;
+
+	private String loginType;
 
 	public HomePreferencePage() {
 		super(GRID);
@@ -51,84 +64,91 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 		this.client = new HttpClientSQLE();
 
 		Display display = PlatformUI.getWorkbench().getDisplay();
-        Shell activeShell = display.getActiveShell();
+		Shell activeShell = display.getActiveShell();
 		this.dialog = new DialogInfo(activeShell);
+		this.loginType = settings.getLoginType();
 	}
 
 	@Override
 	protected void createFieldEditors() {
 		Composite parent = getFieldEditorParent();
+		
 		// 添加sqle地址输入框
 		addrInput = new StringFieldEditor(SQLESettings.SQLE_ADDR_PREFERENCE_KEY, "SQLE Addr:", parent);
+		
 		addField(addrInput);
 		// 添加http/https选项框
-	    String[][] httpHttpsOptions = {{"HTTP", "http"}, {"HTTPS", "https"}};
-	    httpHttpsRadioGroup = new RadioGroupFieldEditor(
-	            SQLESettings.HTTPS_PREFERENCE_KEY,
-	            "HTTP",
-	            2,
-	            httpHttpsOptions,
-	            parent,
-	            true
-	    );
-	    addField(httpHttpsRadioGroup);
-	    
+		String[][] httpHttpsOptions = { { "HTTP", "http" }, { "HTTPS", "https" } };
+		httpHttpsRadioGroup = new RadioGroupFieldEditor(SQLESettings.HTTPS_PREFERENCE_KEY, "HTTP", 2, httpHttpsOptions,
+				parent, true);
+		addField(httpHttpsRadioGroup);
+		
+		addCustomRadio(parent, SQLESettings.PasswordLogin);
+		addCustomRadio(parent, SQLESettings.TokenLogin);
+
 		// 添加用户输入框
 		userInput = new StringFieldEditor(SQLESettings.USER_PREFERENCE_KEY, "用户:", parent);
 		addField(userInput);
-		
+
 		// 添加密码输入框
 		passwordInput = new StringFieldEditor(SQLESettings.PASSWORD_PREFERENCE_KEY, "密码:", parent);
 		passwordInput.getTextControl(parent).setEchoChar('*');
 
 		addField(passwordInput);
 
+		tokenInput = new StringFieldEditor(SQLESettings.ACCESS_TOKEN_KEY, "token:", parent);
+		addField(tokenInput);
+
+		changeRadioSelect(settings.getLoginType(), parent);
+
 		// 添加按钮
 		addCustomButtonField(getFieldEditorParent());
-		
+
 		// 初始化选项
 		String[][] projectOptions = settings.getProjectList();
-		projectCombo = new CustomComboFieldEditor(SQLESettings.PROJECT_PREFERENCE_KEY, "Project", projectOptions, parent);
+		projectCombo = new CustomComboFieldEditor(SQLESettings.PROJECT_PREFERENCE_KEY, "Project", projectOptions,
+				parent);
 		addField(projectCombo);
 		projectCombo.fCombo.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                settings.setProjectName(projectCombo.fCombo.getText());
-                addDBSource();
-            }
-        });
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				settings.setProjectName(projectCombo.fCombo.getText());
+				addDBSource();
+			}
+		});
 
 		String[][] dbTypeOptions = settings.getDBTypeList();
 		dbTypeCombo = new CustomComboFieldEditor(SQLESettings.DBTYPE_PREFERENCE_KEY, "DBType", dbTypeOptions, parent);
 		addField(dbTypeCombo);
 		dbTypeCombo.fCombo.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                settings.setDBType(dbTypeCombo.fCombo.getText());
-                addDBSource();
-            }
-        });
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				settings.setDBType(dbTypeCombo.fCombo.getText());
+				addDBSource();
+			}
+		});
 
 		String[][] dbSourceOptions = settings.getDBSourceList();
-		dataSourceCombo = new CustomComboFieldEditor(SQLESettings.DATASOURCE_PREFERENCE_KEY, "Data Source", dbSourceOptions, parent);
+		dataSourceCombo = new CustomComboFieldEditor(SQLESettings.DATASOURCE_PREFERENCE_KEY, "Data Source",
+				dbSourceOptions, parent);
 		addField(dataSourceCombo);
 		dataSourceCombo.fCombo.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                settings.setDataSourceName(dataSourceCombo.fCombo.getText());
-                addSchema();
-            }
-        });
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				settings.setDataSourceName(dataSourceCombo.fCombo.getText());
+				addSchema();
+			}
+		});
 
 		String[][] schemaOptions = settings.getSchemaList();
 		schemaCombo = new CustomComboFieldEditor(SQLESettings.SCHEMA_PREFERENCE_KEY, "Schema", schemaOptions, parent);
 		addField(schemaCombo);
 		schemaCombo.fCombo.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                settings.setSchemaName(schemaCombo.fCombo.getText());
-            }
-        });
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				settings.setSchemaName(schemaCombo.fCombo.getText());
+			}
+		});
 	}
 
 	private void addCustomButtonField(Composite parent) {
@@ -155,29 +175,35 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 		settings.setSQLEAddr(addrInput.getStringValue());
 		settings.setUserName(userInput.getStringValue());
 		settings.setPassword(passwordInput.getStringValue());
-		
+		settings.setAccessToken(tokenInput.getStringValue());
+
 		Composite radioBoxControl = httpHttpsRadioGroup.getRadioBoxControl(getFieldEditorParent());
-		
+
 		String selectedValue = "http";
 		if (radioBoxControl != null) {
-		    Control[] children = radioBoxControl.getChildren();
-		    
-		    for (Control child : children) {
-		        if (child instanceof Button) {
-		            Button button = (Button) child;
-		            
-		            if (button.getSelection()) {
-		                // 获取选中的按钮的数据
-		                selectedValue = (String) button.getData();
-		                break;
-		            }
-		        }
-		    }
+			Control[] children = radioBoxControl.getChildren();
+
+			for (Control child : children) {
+				if (child instanceof Button) {
+					Button button = (Button) child;
+
+					if (button.getSelection()) {
+						// 获取选中的按钮的数据
+						selectedValue = (String) button.getData();
+						break;
+					}
+				}
+			}
 		}
-				
+
 		settings.setEnableHttps(selectedValue);
 		try {
-			client.Login();
+			if (settings.getLoginType().equals(SQLESettings.PasswordLogin) || settings.getLoginType().isEmpty()) {
+				client.Login();
+			} else {
+				client.GetProjectList();
+			}
+
 			dialog.displaySuccessDialog("Test Connect", "Test Connection Success");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -271,5 +297,44 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 			resultArray[i][1] = arrayList.get(i);
 		}
 		return resultArray;
+	}
+
+	private void addCustomRadio(Composite parent, String layout) {
+		Button radioButton = new Button(parent, SWT.RADIO);
+		radioButton.setText(layout);
+
+		if (settings.getLoginType().equals(layout)) {
+			radioButton.setSelection(true);
+		}
+
+		// 添加选择监听器以处理按钮点击事件
+		radioButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				loginType = layout;
+				settings.setLoginType(layout);
+				changeRadioSelect(layout, parent);
+			}
+		});
+	}
+
+	private void changeRadioSelect(String layout, Composite parent) {
+		if (layout.equals(SQLESettings.PasswordLogin) || layout.isEmpty()) {
+			userInput.setEnabled(true, parent);
+			passwordInput.setEnabled(true, parent);
+			tokenInput.setEnabled(false, parent);
+		} else {
+			userInput.setEnabled(false, parent);
+			passwordInput.setEnabled(false, parent);
+			tokenInput.setEnabled(true, parent);
+		}
+	}
+
+	@Override
+	public boolean performOk() {
+		super.performOk();
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		preferenceStore.setValue(SQLESettings.LOGIN_TYPE_PREFERENCE_KEY, loginType);
+		return true;
 	}
 }

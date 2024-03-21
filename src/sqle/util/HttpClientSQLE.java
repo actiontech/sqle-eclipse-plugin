@@ -28,9 +28,19 @@ public class HttpClientSQLE {
 
 	public HttpClientSQLE() {
 		settings = SQLESettings.getInstance();
-		token = settings.getToken();
 	}
 	
+	private void DetermineHaveToken() throws Exception {
+		if (settings.getLoginType().equals(SQLESettings.PasswordLogin)) {
+			if (token == null || token.isEmpty()) {
+				Login();
+			}
+		} else {
+			token = settings.getAccessToekn();
+		}
+
+	}
+
 	private String GetAddr() {
 		String uriHead;
 		boolean EnableHttps = settings.isEnableHttps();
@@ -64,9 +74,7 @@ public class HttpClientSQLE {
 	}
 
 	public Map<String, String> GetProjectList() throws Exception {
-		if (token == null || token.equals("")) {
-			Login();
-		}
+		DetermineHaveToken();
 
 		String reqPath = String.format("%s?page_index=%s&page_size=%s", projectPath, "1", "999999");
 		JsonObject resp = sendGet(GetAddr() + reqPath);
@@ -100,9 +108,7 @@ public class HttpClientSQLE {
 	}
 
 	public ArrayList<String> GetDBTypes() throws Exception {
-		if (token == null || token.equals("")) {
-			Login();
-		}
+		DetermineHaveToken();
 
 		JsonObject resp  = sendGet(GetAddr() + driversPath);
         if (resp.get("code").getAsInt() != 0) {
@@ -118,9 +124,7 @@ public class HttpClientSQLE {
 	}
 
 	public ArrayList<String> GetDataSourceNameList(String projectName, String dbType) throws Exception {
-		if (token == null || token.equals("")) {
-			Login();
-		}
+		DetermineHaveToken();
 
 		String projectID = settings.getProjectUidMap().get(projectName);
 
@@ -159,9 +163,7 @@ public class HttpClientSQLE {
 	}
 
 	public ArrayList<String> GetSchemaList(String projectName, String dataSourceName) throws Exception {
-		if (token == null || token.equals("")) {
-			Login();
-		}
+		DetermineHaveToken();
 
 		String reqPath = String.format(HttpClientSQLE.schemaPath, projectName, dataSourceName);
 		JsonObject resp = sendGet(GetAddr() + reqPath);
@@ -178,9 +180,7 @@ public class HttpClientSQLE {
 	}
 
 	public SQLEAuditResult AuditSQL(String[] contents, SQLESettings.AuditType type) throws Exception {
-		if (token == null || token.equals("")) {
-			Login();
-		}
+		DetermineHaveToken();
 
 		Map<String, Object> req = new HashMap<>();
 		req.put("instance_type", settings.getDBType());
@@ -224,11 +224,16 @@ public class HttpClientSQLE {
         }
         in.close();
         int responseCode = conn.getResponseCode();
-        if (responseCode == 401) {
-            Login();
-            return sendGet(path);
-        }
         String respStr = response.toString();
+
+        if (responseCode == 401) {
+            if (settings.getLoginType().equals(SQLESettings.PasswordLogin)) {
+            	Login();
+                return sendGet(path);
+            } else {
+            	throw new Exception("response code != 200, message: " + respStr);
+            }
+        }
         if (responseCode != 200) {
             throw new Exception("response code != 200, message: " + respStr);
         }
@@ -258,11 +263,16 @@ public class HttpClientSQLE {
         }
         in.close();
         int responseCode = conn.getResponseCode();
-        if (responseCode == 401) {
-            Login();
-            return sendPOST(path, request);
-        }
         String respStr = response.toString();
+
+        if (responseCode == 401) {
+            if (settings.getLoginType().equals(SQLESettings.PasswordLogin)) {
+            	Login();
+                return sendGet(path);
+            } else {
+            	throw new Exception("response code != 200, message: " + respStr);
+            }
+        }
         if (responseCode != 200) {
             throw new Exception("response code != 200, message: " + respStr);
         }

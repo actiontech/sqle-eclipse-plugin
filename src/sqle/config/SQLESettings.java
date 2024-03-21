@@ -19,6 +19,13 @@ public class SQLESettings {
 	public static final String DATASOURCE_PREFERENCE_KEY = "dataSourcePreference";
 	public static final String SCHEMA_PREFERENCE_KEY = "schemaPreference";
 	public static final String HTTPS_PREFERENCE_KEY = "httpPreference";
+	public static final String LOGIN_TYPE_PREFERENCE_KEY = "loginTypePreference";
+	public static final String ACCESS_TOKEN_KEY = "accessTokenKey";
+	
+	public static final String PasswordLogin = "账号密码登录";
+	public static final String TokenLogin = "token登录";
+
+
 	
     private String SQLEAddr;
     private boolean EnableHttps;
@@ -29,6 +36,8 @@ public class SQLESettings {
     private String DataSourceName;
     private String SchemaName;
     private String Token;
+    private String LoginType;
+    private String AccessToken;
     
     public String[][] ProjectList = {};
     public String[][] DBTypeList = {};
@@ -47,6 +56,8 @@ public class SQLESettings {
         String dataSource = store.getString(DATASOURCE_PREFERENCE_KEY);
         String schema = store.getString(SCHEMA_PREFERENCE_KEY);
         String httpType = store.getString(HTTPS_PREFERENCE_KEY);
+        String loginType = store.getString(LOGIN_TYPE_PREFERENCE_KEY);
+        String accessToken = store.getString(ACCESS_TOKEN_KEY);
         
         String[][] projectList = {{project, project}};
         this.setProjectList(projectList);
@@ -65,6 +76,8 @@ public class SQLESettings {
         this.DBType = dbType;
         this.DataSourceName = dataSource;
         this.SchemaName = schema;
+        this.LoginType = loginType;
+        this.AccessToken = accessToken;
     }
     
     private SQLESettings() {
@@ -174,4 +187,19 @@ public class SQLESettings {
     public void setProjectUidMap(Map<String, String> projectUidMap) {
         this.projectUidMap = projectUidMap;
     }
+	public String getLoginType() {
+		if (LoginType.isEmpty()) {
+			return PasswordLogin;
+		}
+		return LoginType;
+	}
+	public void setLoginType(String loginType) {
+		LoginType = loginType;
+	}
+	public String getAccessToekn() {
+		return AccessToken;
+	}
+	public void setAccessToken(String accessToken) {
+		AccessToken = accessToken;
+	}
 }
