@@ -18,11 +18,12 @@ Eclipse插件最低适配Eclipse 2015 mars版本
 ![安装插件](https://github.com/actiontech/sqle-ee/assets/53266479/c6f1144f-88ad-49a0-961a-309b73d53d3c)
 ### 配置插件
   - 点击[Window]-[Preferences]-[SQLE]
-  - 输入SQLE Addr，用户以及密码
+  - 输入SQLE Addr
+  - 选择账号密码或者token登录；输入对应的账号密码或者token
   - 点击Test Connection，确保可以连接到SQLE，并获取Project和DBType列表
   - 依次选取Project，DBType，Data Source和Schema下拉框
   - 点击Apply and Close保存配置并退出配置界面
-   ![20240118-133603](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/4d113257-0b28-4bc8-81d5-1d955ca95009)
+      ![20240118-133603](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/4d113257-0b28-4bc8-81d5-1d955ca95009)
 
   - 配置说明
 
@@ -32,6 +33,7 @@ Eclipse插件最低适配Eclipse 2015 mars版本
 | HTTP       | 指定通过http的方式连接SQLE还是通过https的方式连接                           |
 | UserName        | 登录SQLE使用的用户名                                     |
 | Password        | 登录SQLE使用的密码                                      |
+| Token           | 登录SQLE使用的个人密钥                               |
 | Test Connection | 测试连接是否成功, 将会尝试登录                                 |
 | Project         | 项目名称                                             |
 | DB Type         | 当其他配置正确时此下拉框会自动获取支持审核的实例类型, 选择后会使用此实例类型的审核规则进行审核 |
@@ -50,5 +52,4 @@ Eclipse插件最低适配Eclipse 2015 mars版本
 
 4. 审核xml文件夹，选中文件夹，鼠标右击选中 [SQLE Mybatis Folder Audit]
 ![20240118-134450](https://github.com/actiontech/sqle-eclipse-plugin/assets/53266479/c1ab3c24-8d71-4266-9654-8ef12ae989fe)
-
 
