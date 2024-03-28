@@ -8,10 +8,12 @@ import java.lang.reflect.Field;
 public class CustomComboFieldEditor extends ComboFieldEditor {
 	public Combo fCombo;
 	public String[][] values;
+	public String title;
 	
 	public CustomComboFieldEditor(String name, String labelText, String[][] entryNamesAndValues, Composite parent) {
 		super(name, labelText, entryNamesAndValues, parent);
 		this.fCombo = getCustomComboControl();
+		this.title = labelText;
 	}
 
 	public void addNewValues(String[][] newValues) {

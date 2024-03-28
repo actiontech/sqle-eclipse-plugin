@@ -186,8 +186,8 @@ public class HttpClientSQLE {
 		req.put("instance_type", settings.getDBType());
 		req.put("file_contents", contents);
 		req.put("project_name", settings.getProjectName());
-		req.put("instance_name", settings.getDataSourceName());
-		req.put("schema_name", settings.getSchemaName());
+//		req.put("instance_name", settings.getDataSourceName());
+//		req.put("schema_name", settings.getSchemaName());
 
 		switch (type) {
 		case SQL:
