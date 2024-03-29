@@ -1,25 +1,19 @@
 package sqle.action;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.jface.preference.ComboFieldEditor;
-import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -27,7 +21,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.swt.widgets.Text;
 
 import sqle.util.HttpClientSQLE;
 import sqle.config.SQLESettings;
@@ -113,7 +106,7 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				settings.setProjectName(projectCombo.fCombo.getText());
-				addDBSource();
+				addDBType();
 			}
 		});
 
@@ -124,6 +117,7 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				settings.setDBType(dbTypeCombo.fCombo.getText());
+				addProjectInfo();
 				addDBSource();
 			}
 		});
@@ -332,9 +326,32 @@ public class HomePreferencePage extends FieldEditorPreferencePage implements IWo
 
 	@Override
 	public boolean performOk() {
+		boolean isValid = validateFields();
+		if (!isValid) {
+			return false;
+		}
 		super.performOk();
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		preferenceStore.setValue(SQLESettings.LOGIN_TYPE_PREFERENCE_KEY, loginType);
 		return true;
+	}
+	
+	private boolean validateFields() {
+		List<CustomComboFieldEditor> list = new ArrayList<>(Arrays.asList(projectCombo, dbTypeCombo));
+		Display display = PlatformUI.getWorkbench().getDisplay();
+		Shell activeShell = display.getActiveShell();
+        // 使用 for 循环遍历列表
+        for (CustomComboFieldEditor item : list) {
+        	String value = item.fCombo.getText();
+    	    if (value.isEmpty()) {
+    	    	String errorMsg = String.format("%s为必填字段不能为空", item.title);
+
+    			DialogInfo dialog = new DialogInfo(activeShell);
+    			dialog.displayErrorDialog(item.title, errorMsg);
+    	        return false;
+    	    }
+        }
+		
+	    return true;
 	}
 }
